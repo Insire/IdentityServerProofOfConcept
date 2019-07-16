@@ -24,7 +24,9 @@ namespace IdentityServer
         {
             return new ApiResource[]
             {
-                new ApiResource("api1", "My API")
+                new ApiResource("api1", "My API"),
+                // local API
+                new ApiResource(IdentityServerConstants.LocalApi.ScopeName),
             };
         }
 
@@ -75,7 +77,7 @@ namespace IdentityServer
                     },
 
                     // scopes that client has access to
-                    AllowedScopes = { "api1" }
+                    AllowedScopes = { "api1", IdentityServerConstants.LocalApi.ScopeName }
                 },
                 new Client
                 {

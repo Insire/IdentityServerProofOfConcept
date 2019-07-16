@@ -25,15 +25,13 @@ namespace Client
                 return;
             }
 
-            var tokenResponse = await client.RequestPasswordTokenAsync(new PasswordTokenRequest
+            var tokenResponse = await client.RequestClientCredentialsTokenAsync(new ClientCredentialsTokenRequest
             {
                 Address = disco.TokenEndpoint,
-                ClientId = "ro.client",
+                ClientId = "client",
                 ClientSecret = "secret",
 
-                UserName = "alice",
-                Password = "password",
-                Scope = "api1"
+                Scope = "IdentityServerApi"
             });
 
             if (tokenResponse.IsError)
@@ -43,6 +41,19 @@ namespace Client
             }
 
             Console.WriteLine(tokenResponse.Json);
+
+            client.SetBearerToken(tokenResponse.AccessToken);
+
+            var response = await client.GetAsync("http://localhost:5000/localApi");
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine(response.StatusCode);
+            }
+            else
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                Console.WriteLine(JArray.Parse(content));
+            }
         }
     }
 }

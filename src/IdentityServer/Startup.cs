@@ -2,9 +2,13 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 using System;
+using System.Linq;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using static IdentityServer4.IdentityServerConstants;
 
 namespace IdentityServer
 {
@@ -22,14 +26,19 @@ namespace IdentityServer
             // uncomment, if you wan to add an MVC-based UI
             services
                 .AddMvc()
-                .SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_2_1);
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             var builder = services
-                .AddIdentityServer()
+                .AddIdentityServer(options =>
+                {
+                    options.Discovery.CustomEntries.Add("local_api", "~/localapi");
+                })
                 .AddInMemoryIdentityResources(Config.GetIdentityResources())
                 .AddInMemoryApiResources(Config.GetApis())
                 .AddInMemoryClients(Config.GetClients())
                 .AddTestUsers(Config.GetUsers());
+
+            services.AddLocalApiAuthentication();
 
             if (Environment.IsDevelopment())
             {
@@ -55,6 +64,16 @@ namespace IdentityServer
 
             // uncomment, if you wan to add an MVC-based UI
             app.UseMvcWithDefaultRoute();
+        }
+    }
+
+    [Route("localApi")]
+    [Authorize(LocalApi.PolicyName)]
+    public class LocalApiController : ControllerBase
+    {
+        public IActionResult Get()
+        {
+            return new JsonResult(from c in User.Claims select new { c.Type, c.Value });
         }
     }
 }
